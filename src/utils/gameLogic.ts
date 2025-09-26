@@ -1,7 +1,7 @@
 import { Piece, getDailySeed, generatePieces } from '@/data/pieces';
 import confetti from 'canvas-confetti';
 
-export { Piece }; // Re-export for convenience in components
+export type { Piece }; // Re-export for convenience in components
 
 export const GRID_SIZE = 10;
 const COMBO_MULTIPLIERS = { 1: 1, 2: 2, 3: 5 }; // Tunable: rows/cols cleared -> multiplier
