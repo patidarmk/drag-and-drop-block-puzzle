@@ -10,19 +10,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Index from "./<applaa-write path="src/App.tsx">
-import * as React from 'react'
-import { 
-  createRouter, 
-  RouterProvider, 
-  createRootRoute, 
-  createRoute as createTanStackRoute, 
-  Outlet 
-} from '@tanstack/react-router'
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./pages/Index";
 import Game from "./pages/Game";
 import Leaderboard from "./pages/Leaderboard";
@@ -73,8 +60,8 @@ const dailyRoute = createTanStackRoute({
   getParentRoute: () => rootRoute,
   path: '/daily',
   component: () => {
-    window.location.href = '/game?isDaily=true'; // Simple redirect with flag (handle in Game via search params if needed)
-    return <div>Redirecting to Daily...</div>;
+    window.location.href = '/game'; // Redirect to game; daily flag handled in component
+    return <div>Redirecting to Daily Challenge...</div>;
   },
 })
 

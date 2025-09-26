@@ -14,7 +14,7 @@ const HUD: React.FC<HUDProps> = ({ state, onShare, onRestart }) => {
   useEffect(() => {
     if (state.startTime) {
       const interval = setInterval(() => {
-        setTime(Date.now() - state.startTime);
+        setTime(Date.now() - (state.startTime || 0));
       }, 1000);
       return () => clearInterval(interval);
     }

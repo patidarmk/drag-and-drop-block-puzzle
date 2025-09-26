@@ -4,7 +4,7 @@ import GameBoard from '@/components/GameBoard';
 import PieceTray from '@/components/PieceTray';
 import HUD from '@/components/HUD';
 import TutorialOverlay from '@/components/TutorialOverlay';
-import { initGame, placePiece, saveGameState, loadGameState, saveScore, generateShareableSeed } from '@/utils/gameLogic';
+import { GameState, Piece, initGame, placePiece, saveGameState, loadGameState, saveScore, generateShareableSeed } from '@/utils/gameLogic';
 import { MadeWithApplaa } from '@/components/made-with-applaa';
 import { Share2, Settings, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ const Game: React.FC = () => {
     const saved = loadGameState();
     if (saved) {
       setState(saved);
+      setIsDaily(saved.isDaily);
     } else {
       setShowTutorial(true);
     }
@@ -27,7 +28,7 @@ const Game: React.FC = () => {
 
   useEffect(() => {
     saveGameState(state);
-    if (state.gameOver) {
+    if (state.gameOver && !isDaily) { // Save score only for non-daily in this component
       const name = prompt('Enter your name for leaderboard:') || 'Anonymous';
       saveScore(name, state.score);
     }

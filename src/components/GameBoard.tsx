@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GridCell, Piece, placePiece, isValidPlacement } from '@/utils/gameLogic';
+import { GridCell, Piece, placePiece, isValidPlacement, GRID_SIZE } from '@/utils/gameLogic';
 import { cn } from '@/lib/utils';
 import { Square } from 'lucide-react';
 
@@ -33,8 +33,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ grid, tray, onPlace, gameOver }) 
 
     // Snap to nearest grid cell based on drop position
     const rect = e.currentTarget.getBoundingClientRect();
-    const snapRow = Math.max(0, Math.min(9, Math.round((e.clientY - rect.top) / CELL_SIZE)));
-    const snapCol = Math.max(0, Math.min(9, Math.round((e.clientX - rect.left) / CELL_SIZE)));
+    const snapRow = Math.max(0, Math.min(GRID_SIZE - 1, Math.round((e.clientY - rect.top) / CELL_SIZE)));
+    const snapCol = Math.max(0, Math.min(GRID_SIZE - 1, Math.round((e.clientX - rect.left) / CELL_SIZE)));
 
     if (isValidPlacement(grid, dragPiece, snapRow, snapCol)) {
       onPlace(dragPiece, snapRow, snapCol);
@@ -76,7 +76,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ grid, tray, onPlace, gameOver }) 
           }}
         >
           {/* Ghost preview of piece */}
-          <div className={`p-1 rounded ${dragPiece.color} bg-[${dragPiece.color}]`}>
+          <div className={`p-1 rounded bg-[${dragPiece.color}]`}>
             {dragPiece.positions.map(([x, y], i) => (
               <div key={i} className="w-8 h-8 bg-white inline-block m-0.5" />
             ))}

@@ -21,9 +21,9 @@ export const generatePieces = (seed: string = Date.now().toString()): Piece[] =>
   ];
 
   // Add specials occasionally (20% chance based on seed)
-  const specials = [
-    { id: 'bomb1', type: 'bomb' as const, positions: [[0,0]], color: '#ff00ff' },
-    { id: 'line1', type: 'line-clear' as const, positions: [[0,0]], color: '#00ffff' },
+  const specials: Piece[] = [
+    { id: 'bomb1', type: 'bomb', positions: [[0,0]] as [number, number][], color: '#ff00ff' },
+    { id: 'line1', type: 'line-clear', positions: [[0,0]] as [number, number][], color: '#00ffff' },
   ];
   if (h % 5 === 0) basePieces.push(specials[0]);
   if (h % 7 === 0) basePieces.push(specials[1]);

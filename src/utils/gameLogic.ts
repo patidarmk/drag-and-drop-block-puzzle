@@ -1,7 +1,9 @@
 import { Piece, getDailySeed, generatePieces } from '@/data/pieces';
 import confetti from 'canvas-confetti';
 
-const GRID_SIZE = 10;
+export { Piece }; // Re-export for convenience in components
+
+export const GRID_SIZE = 10;
 const COMBO_MULTIPLIERS = { 1: 1, 2: 2, 3: 5 }; // Tunable: rows/cols cleared -> multiplier
 const BASE_POINTS_PER_TILE = 10;
 const SPEED_BONUS_THRESHOLD = 5000; // ms; tunable for faster placements
@@ -44,12 +46,16 @@ export const isValidPlacement = (grid: GridCell[][], piece: Piece, row: number, 
   return true;
 };
 
-export const placePiece = (state: GameState, piece: Piece, row: number, col: number, placementTime?: number): GameState {
+export const placePiece = (state: GameState, piece: Piece, row: number, col: number, placementTime?: number): GameState => {
   if (!isValidPlacement(state.grid, piece, row, col)) return { ...state, gameOver: checkGameOver(state) };
 
   const newGrid = state.grid.map(rowArr => [...rowArr]);
   const placeTime = placementTime || Date.now();
-  state.placements.push(placeTime - (state.startTime || placeTime));
+  if (!state.startTime) {
+    state.placements.push(placeTime - placeTime); // Initialize
+  } else {
+    state.placements.push(placeTime - state.startTime);
+  }
 
   for (const [dx, dy] of piece.positions) {
     const r = row + dy;
@@ -66,9 +72,11 @@ export const placePiece = (state: GameState, piece: Piece, row: number, col: num
 
   // Handle specials
   if (piece.type === 'bomb') {
-    newState = applyBomb(newGrid, row, col);
+    const updatedGrid = applyBomb(newGrid, row, col);
+    newState = { ...newState, grid: updatedGrid };
   } else if (piece.type === 'line-clear') {
-    newState = applyLineClear(newGrid, row > GRID_SIZE / 2 ? 'row' : 'col', row % GRID_SIZE); // Simple: clear row or col based on drop pos
+    const updatedGrid = applyLineClear(newGrid, row > GRID_SIZE / 2 ? 'row' : 'col', row % GRID_SIZE);
+    newState = { ...newState, grid: updatedGrid };
   }
 
   // Clear lines and score
@@ -82,7 +90,6 @@ export const placePiece = (state: GameState, piece: Piece, row: number, col: num
     ...newState,
     score: newState.score + points,
     combo: totalCleared,
-    grid: newState.grid, // Updated from clears
   };
 
   // Confetti for combos 3+
@@ -126,28 +133,31 @@ const applyLineClear = (grid: GridCell[][], type: 'row' | 'col', index: number):
 const clearLines = (grid: GridCell[][]): { clearedRows: number; clearedCols: number } => {
   let clearedRows = 0;
   let clearedCols = 0;
+  const newGrid = grid.map(r => [...r]); // Work on copy to avoid mutation issues
 
   // Check rows
-  for (let r = 0; r < GRID_SIZE; r++) {
-    if (grid[r].every(cell => cell.pieceId)) {
-      grid.splice(r, 1);
-      grid.push(Array(GRID_SIZE).fill({}));
+  for (let r = 0; r < newGrid.length; r++) {
+    if (newGrid[r].every(cell => cell.pieceId)) {
+      newGrid.splice(r, 1);
+      newGrid.push(Array(GRID_SIZE).fill({}));
       clearedRows++;
       r--; // Re-check shifted row
     }
   }
 
-  // Check cols (simplified; shift down)
+  // Check cols (simplified; clear without shifting for now)
   for (let c = 0; c < GRID_SIZE; c++) {
-    const colFull = grid.every(row => row[c].pieceId);
+    const colFull = newGrid.every(row => row[c].pieceId);
     if (colFull) {
       for (let r = 0; r < GRID_SIZE; r++) {
-        grid[r][c] = {};
+        newGrid[r][c] = {};
       }
       clearedCols++;
     }
   }
 
+  // Update original grid reference if needed, but since we return counts, pass newGrid back if necessary
+  Object.assign(grid, newGrid); // Mutate original for simplicity
   return { clearedRows, clearedCols };
 };
 
@@ -172,7 +182,7 @@ export const loadGameState = (isDaily?: boolean, key: string = 'combo-blocks-sta
   if (saved) {
     const parsed = JSON.parse(saved);
     if (isDaily && parsed.isDaily !== isDaily) return null; // Daily invalid if not matching
-    return parsed;
+    return parsed as GameState;
   }
   return null;
 };

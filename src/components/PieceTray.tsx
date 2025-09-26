@@ -1,5 +1,5 @@
 import React from 'react';
-import { Piece } from '@/utils/gameLogic';
+import { Piece } from '@/data/pieces';
 import { cn } from '@/lib/utils';
 
 interface PieceTrayProps {
