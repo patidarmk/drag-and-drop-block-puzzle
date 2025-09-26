@@ -20,17 +20,17 @@ const PieceTray: React.FC<PieceTrayProps> = ({ tray, onDragStart }) => {
           draggable
           onDragStart={(e) => onDragStart(e, piece)}
         >
-          <div className={`inline-block p-1 rounded bg-[${piece.color}] mb-1`}>
+          <div className={`inline-block p-1 rounded bg-[${piece.color}] mb-1 w-16 h-16 flex flex-wrap items-center justify-center`}>
             {piece.positions.map(([x, y], i) => (
-              <div key={i} className="w-4 h-4 bg-white inline-block m-0" />
+              <div key={i} className="w-4 h-4 bg-white m-0.5" />
             ))}
           </div>
-          <span className="text-xs capitalize">{piece.type}</span>
+          <span className="text-xs capitalize block">{piece.type}</span>
           {piece.type === 'bomb' && <span className="text-xs ml-1">💣</span>}
           {piece.type === 'line-clear' && <span className="text-xs ml-1">✨</span>}
         </div>
       ))}
-      {tray.length === 0 && <p className="text-gray-500 text-sm">No pieces left!</p>}
+      {tray.length === 0 && <p className="text-gray-500 text-sm">No pieces left! New tray incoming...</p>}
     </div>
   );
 };

@@ -1,46 +1,41 @@
-import React, { useState } from 'react';
-import { GridCell, Piece, placePiece, isValidPlacement, GRID_SIZE } from '@/utils/gameLogic';
+import React from 'react';
+import { GridCell, Piece, isValidPlacement, GRID_SIZE } from '@/utils/gameLogic';
 import { cn } from '@/lib/utils';
 import { Square } from 'lucide-react';
 
 interface GameBoardProps {
   grid: GridCell[][];
   tray: Piece[];
+  draggedPiece: Piece | null;
   onPlace: (piece: Piece, row: number, col: number) => void;
   gameOver: boolean;
 }
 
 const CELL_SIZE = 40; // px, tunable for responsiveness
 
-const GameBoard: React.FC<GameBoardProps> = ({ grid, tray, onPlace, gameOver }) => {
-  const [dragPiece, setDragPiece] = useState<Piece | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
-  const handleDragStart = (e: React.DragEvent, piece: Piece) => {
-    setDragPiece(piece);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', piece.id); // For fallback
-  };
-
+const GameBoard: React.FC<GameBoardProps> = ({ grid, tray, draggedPiece, onPlace, gameOver }) => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e: React.DragEvent, row: number, col: number) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!dragPiece || gameOver) return;
+    if (gameOver) return;
+
+    const pieceId = e.dataTransfer.getData('text/plain');
+    const piece = tray.find(p => p.id === pieceId);
+    if (!piece) return;
 
     // Snap to nearest grid cell based on drop position
     const rect = e.currentTarget.getBoundingClientRect();
     const snapRow = Math.max(0, Math.min(GRID_SIZE - 1, Math.round((e.clientY - rect.top) / CELL_SIZE)));
     const snapCol = Math.max(0, Math.min(GRID_SIZE - 1, Math.round((e.clientX - rect.left) / CELL_SIZE)));
 
-    if (isValidPlacement(grid, dragPiece, snapRow, snapCol)) {
-      onPlace(dragPiece, snapRow, snapCol);
+    if (isValidPlacement(grid, piece, snapRow, snapCol)) {
+      onPlace(piece, snapRow, snapCol);
     }
-    // Else: piece returns to tray (no action needed, as it's not removed until valid place)
-    setDragPiece(null);
+    // Else: piece returns to tray (no action needed)
   };
 
   const renderCell = (cell: GridCell, row: number, col: number) => (
@@ -53,7 +48,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ grid, tray, onPlace, gameOver }) 
       )}
       draggable={false}
       onDragOver={handleDragOver}
-      onDrop={(e) => handleDrop(e, row, col)}
+      onDrop={handleDrop}
     >
       {cell.type === 'bomb' && <span className="text-xs">💣</span>}
       {cell.type === 'line-clear' && <span className="text-xs">✨</span>}
@@ -63,22 +58,31 @@ const GameBoard: React.FC<GameBoardProps> = ({ grid, tray, onPlace, gameOver }) 
 
   return (
     <div className="relative bg-gray-100 p-4 rounded-lg shadow-lg max-w-xs mx-auto">
-      <div className="grid grid-cols-10 gap-0" style={{ width: GRID_SIZE * CELL_SIZE, height: GRID_SIZE * CELL_SIZE }}>
+      <div 
+        className="grid grid-cols-10 gap-0" 
+        style={{ width: GRID_SIZE * CELL_SIZE, height: GRID_SIZE * CELL_SIZE }}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
         {grid.flatMap((row, r) => row.map((cell, c) => renderCell(cell, r, c)))}
       </div>
-      {dragPiece && (
+      {draggedPiece && (
         <div
-          className="absolute pointer-events-none opacity-70"
+          className="absolute pointer-events-none opacity-70 z-10"
           style={{
-            left: dragOffset.x,
-            top: dragOffset.y,
-            transform: 'translate(-50%, -50%)',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          {/* Ghost preview of piece */}
-          <div className={`p-1 rounded bg-[${dragPiece.color}]`}>
-            {dragPiece.positions.map(([x, y], i) => (
-              <div key={i} className="w-8 h-8 bg-white inline-block m-0.5" />
+          {/* Simple ghost preview - position based on mouse, but for now centered; enhance with mouse coords if needed */}
+          <div className={`p-2 rounded bg-[${draggedPiece.color}] flex flex-wrap w-16 h-16 items-center justify-center`}>
+            {draggedPiece.positions.map(([x, y], i) => (
+              <div key={i} className="w-4 h-4 bg-white m-0.5" />
             ))}
           </div>
         </div>

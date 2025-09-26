@@ -15,6 +15,7 @@ const Game: React.FC = () => {
   const [state, setState] = useState<GameState>(initGame(false));
   const [showTutorial, setShowTutorial] = useState(false);
   const [isDaily, setIsDaily] = useState(false);
+  const [draggedPieceId, setDraggedPieceId] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = loadGameState();
@@ -28,21 +29,32 @@ const Game: React.FC = () => {
 
   useEffect(() => {
     saveGameState(state);
-    if (state.gameOver && !isDaily) { // Save score only for non-daily in this component
+    if (state.gameOver && !isDaily) { // Save score only for non-daily
       const name = prompt('Enter your name for leaderboard:') || 'Anonymous';
       saveScore(name, state.score);
     }
-  }, [state.gameOver, state.score]);
+  }, [state.gameOver, state.score, isDaily]);
+
+  const handleDragStart = (e: React.DragEvent, piece: Piece) => {
+    setDraggedPieceId(piece.id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', piece.id);
+  };
 
   const handlePlace = (piece: Piece, row: number, col: number) => {
     if (!state.startTime) {
       setState(prev => ({ ...prev, startTime: Date.now() }));
     }
-    setState(prev => placePiece(prev, piece, row, col, Date.now()));
+    setState(prev => {
+      const newState = placePiece(prev, piece, row, col, Date.now());
+      setDraggedPieceId(null); // Clear drag after placement
+      return newState;
+    });
   };
 
   const handleRestart = () => {
     setState(initGame(isDaily));
+    setDraggedPieceId(null);
     setShowTutorial(false);
   };
 
@@ -50,6 +62,7 @@ const Game: React.FC = () => {
     setIsDaily(true);
     const dailyState = initGame(true);
     setState(dailyState);
+    setDraggedPieceId(null);
   };
 
   const handleShare = async () => {
@@ -62,6 +75,8 @@ const Game: React.FC = () => {
       alert('Score copied to clipboard!');
     }
   };
+
+  const draggedPiece = draggedPieceId ? (state.tray.find(p => p.id === draggedPieceId) ?? null) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex flex-col">
@@ -90,8 +105,14 @@ const Game: React.FC = () => {
             <CardTitle className="text-center">Drag & Drop to Play!</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4">
-            <GameBoard grid={state.grid} tray={state.tray} onPlace={handlePlace} gameOver={state.gameOver} />
-            <PieceTray tray={state.tray} onDragStart={() => {}} /> {/* Drag handled in board */}
+            <GameBoard 
+              grid={state.grid} 
+              tray={state.tray} 
+              draggedPiece={draggedPiece} 
+              onPlace={handlePlace} 
+              gameOver={state.gameOver} 
+            />
+            <PieceTray tray={state.tray} onDragStart={handleDragStart} />
             <HUD state={state} onShare={handleShare} onRestart={handleRestart} />
           </CardContent>
         </Card>
